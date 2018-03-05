@@ -13,79 +13,68 @@ import {
     ListView,
     TouchableHighlight
 } from 'react-native';
-import * as firebase from 'firebase';
-import Toolbar from './components/Toolbar/toolbar.component';
+
+import itemService from './services/item.service'
 import styles from './styles/app.style'
+import Toolbar from './components/Toolbar/toolbar.component'
 
-const firebaseConfig = { 
-    apiKey: "AIzaSyBDLQscuvIL7ZxP6wPqEPd32rdX0ZgQ2CQ",
-    authDomain: "fir-appdatabase-9e1bb.firebaseapp.com",
-    databaseURL: "https://fir-appdatabase-9e1bb.firebaseio.com",
-    storageBucket: "fir-appdatabase-9e1bb.appspot.com",
-}
-
-const fbApp = null;
-if (!firebase.apps.length) {
-    fbApp = firebase.initializeApp(firebaseConfig);
-}
+const items = [
+    {
+        title: '',
+        _key: ''
+    }
+];
 
 export default class App extends Component {
     constructor(){
         super();
-        let ds = new ListView.DataSource({
-            rowHasChanged:(r1,r2) => r1 !== r2
-        });
+        let ds = new ListView.DataSource({rowHasChanged:(r1,r2) => r1 != r2});
 
         this.state = {
-            itemDataSource: ds
-        }
+            itemDataSource: ds.cloneWithRows(items),
+        };
 
-        this.itemsRef = this.getRef().child('items');        
         this.renderRow = this.renderRow.bind(this);
         this.pressRow = this.pressRow.bind(this);
     }
 
-    getRef(){
-        return fbApp.database().ref();
+    getDataFromServer(){
+        console.log("getDataFromServer called");
+        itemService.getItemList().then((response)=>{
+            if(response.success){
+                let items = response.dataList;
+                var itemsListDs = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 != r2});
+                var itemList = itemsListDs.cloneWithRows(response.dataList);
+                console.log(itemList);
+                this.setState({
+                    itemDataSource: itemList
+                });
+            }
+        });
+        /* let items = [
+            {
+                title:'itemOne'
+            },
+            {
+                title:'itemTwo'
+            }
+        ]
+        this.setState({
+            itemDataSource: this.state.itemDataSource.cloneWithRows(items)
+        }); */
     }
 
+
     componentWillMount(){
-        this.getItems(this.itemsRef);
+        console.log("componentWillMount called");
+        this.getDataFromServer();
     }
 
     componentDidMount(){
-        this.getItems(this.itemsRef);
-    }
-
-    getItems(itemsRef){
-        console.log('itemRefIn_getItems',itemsRef);
-        
-        /* let items = [
-            {
-                title:'itemOne',
-            },
-            {
-                title:'itemTwo',
-            }
-        ];
-        this.setState({
-            itemDataSource: this.state.itemDataSource.cloneWithRows(items)
-        }) */
-
-            
-        itemsRef.on("value", function(snap) {
-            var items = [];
-            snap.forEach((child) => {
-                items.push({
-                    title: child.val().title,
-                    _key: child.key
-                });
-            });
-    
-            this.setState({
-                dataSource: this.state.itemDataSource.cloneWithRows(items)
-            });
-        })        
+        itemService.itemsRef.on('child_added', (child) => {
+            console.log("child_added called");
+            this.getDataFromServer();
+        });
     }
 
     pressRow(item){
