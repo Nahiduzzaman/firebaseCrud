@@ -13,6 +13,8 @@ import {
     ListView,
     TouchableHighlight
 } from 'react-native';
+import { StackNavigator } from 'react-navigation';
+
 
 import itemService from './services/item.service'
 import styles from './styles/app.style'
@@ -25,7 +27,17 @@ const items = [
     }
 ];
 
-export default class App extends Component {
+class App extends Component {
+    static navigationOptions = {
+        title: 'Home',
+        headerStyle: {
+            backgroundColor: '#212121'
+        },
+        headerTitleStyle: {
+            color: '#ffffff'
+        }
+    };
+    
     constructor(){
         super();
         let ds = new ListView.DataSource({rowHasChanged:(r1,r2) => r1 != r2});
@@ -36,7 +48,7 @@ export default class App extends Component {
 
         this.renderRow = this.renderRow.bind(this);
         this.pressRow = this.pressRow.bind(this);
-    }
+    };
 
     getDataFromServer(){
         console.log("getDataFromServer called");
@@ -62,24 +74,24 @@ export default class App extends Component {
         this.setState({
             itemDataSource: this.state.itemDataSource.cloneWithRows(items)
         }); */
-    }
+    };
 
 
     componentWillMount(){
         console.log("componentWillMount called");
         this.getDataFromServer();
-    }
+    };
 
     componentDidMount(){
         itemService.itemsRef.on('child_added', (child) => {
             console.log("child_added called");
             this.getDataFromServer();
         });
-    }
+    };
 
     pressRow(item){
         console.log(item)
-    }
+    };
 
     renderRow(item){
         console.log(item)
@@ -94,9 +106,10 @@ export default class App extends Component {
                 </View>
             </TouchableHighlight>
         )
-    }
+    };
 
     render() {
+        const {navigate} = this.props.navigation;
         return (
             <View style={styles.container}>
                 <Toolbar title="ItemLister"/>
@@ -106,7 +119,15 @@ export default class App extends Component {
                 />                
             </View>
         );
-    }
+    };
 }
+
+export const screens = StackNavigator({
+    Home: {
+      screen: App
+    }
+});
+
+export default screens;
 
 
