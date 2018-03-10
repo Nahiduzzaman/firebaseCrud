@@ -19,6 +19,9 @@ import { StackNavigator } from 'react-navigation';
 import itemService from './services/item.service'
 import styles from './styles/app.style'
 import Toolbar from './components/Toolbar/toolbar.component'
+import ListDetails from './components/ListDetails/listDetails.component'
+import AddButton from './components/AddButton/addButton.component'
+import InputBox from './components/InputBox/inputBox.component' 
 
 const items = [
     {
@@ -43,11 +46,13 @@ class App extends Component {
         let ds = new ListView.DataSource({rowHasChanged:(r1,r2) => r1 != r2});
 
         this.state = {
+            data:"",
             itemDataSource: ds.cloneWithRows(items),
         };
 
         this.renderRow = this.renderRow.bind(this);
         this.pressRow = this.pressRow.bind(this);
+        this.fromChild1 = this.fromChild1.bind(this);
     };
 
     getDataFromServer(){
@@ -76,6 +81,12 @@ class App extends Component {
         }); */
     };
 
+    fromChild1(params) {
+        console.log('param',params)
+        this.setState({
+            data: params
+        })
+    };
 
     componentWillMount(){
         console.log("componentWillMount called");
@@ -94,11 +105,10 @@ class App extends Component {
     };
 
     renderRow(item){
-        console.log(item)
+        console.log(item);
+        const {navigate} = this.props.navigation;        
         return(
-            <TouchableHighlight onPress={()=>{
-                this.pressRow(item);
-            }}>
+            <TouchableHighlight onPress={() => navigate('ListDetails',{ name: item.title })}>
                 <View style={styles.li}>
                     <Text style={styles.liText}>
                         {item.title}
@@ -109,10 +119,11 @@ class App extends Component {
     };
 
     render() {
-        const {navigate} = this.props.navigation;
         return (
             <View style={styles.container}>
                 <Toolbar title="ItemLister"/>
+                <InputBox callback={this.fromChild1}/>
+                <AddButton data={this.state.data}/>
                 <ListView
                     dataSource={this.state.itemDataSource}
                     renderRow={this.renderRow}
@@ -124,7 +135,10 @@ class App extends Component {
 
 export const screens = StackNavigator({
     Home: {
-      screen: App
+        screen: App
+    },
+    ListDetails:{
+        screen: ListDetails
     }
 });
 
